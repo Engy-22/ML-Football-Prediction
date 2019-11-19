@@ -20,6 +20,7 @@ def get_td_tags(url):
 
 
 def get_outcomes(tags):         # returns the name and the outcome of the game on a schedule
+    #print(tags)
     name = parse_name(tags[0])
     outcome = tags[1][0]        # outcome of the game is the first letter in the score
     return name, outcome
@@ -39,9 +40,11 @@ def get_all_outcomes_on_schedule(url):      # main function to call helpers, ret
     tags = get_td_tags(url)         # get all the tags for the list
     tags = tags[9:]
     team = []
-
+    #print(tags)
     for i in range(12):
         game, outcome = get_outcomes(tags)
+        if outcome == "C":
+            continue
         team.append(game)
         games[game] = outcome       # add to found so far
         tags = tags[7:]             # move to next game

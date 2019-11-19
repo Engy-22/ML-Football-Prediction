@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup as soup
 from urllib.request import urlopen as uReq
 import GetSchedule
+import csv
 
 
 def get_SPStats():                  # return all td tags
@@ -39,7 +40,14 @@ def espn_codes(name):
             "North Carolina": "153", "Pittsburgh": "221", "Virginia": "258", "Virginia Tech": "259", "Georgia": "61",
             "Florida": "57", "Tennessee": "2633", "South Carolina": "2579", "Kentucky": "96", "Missouri": "142",
             "Vanderbilt": "238", "LSU": "99", "Alabama": "333", "Texas A&M": "245", "Auburn": "2",
-            "Mississippi State": "344", "Ole Miss": "145", "Arkansas": "8"}
+            "Mississippi State": "344", "Ole Miss": "145", "Arkansas": "8", "Ohio State": "194", "Penn State": "213",
+            "Michigan": "130", "Indiana": "84", "Michigan State": "124", "Maryland": "120", "Rutgers": "164",
+            "Minnesota": "135", "Wisconsin": "275", "Iowa": "2294", "Illinois": "356", "Purdue": "2509",
+            "Nebraska": "158", "Northwestern": "77", "Oregon": "2483", "Oregon State": "204", "Washington": "264",
+            "Stanford": "24", "California": "25", "Washington State": "265", "Utah": "254", "USC": "30", "UCLA": "26",
+            "Arizona State": "9", "Arizona": "12", "Colorado": "38", "Oklahoma": "201", "Baylor": "239",
+            "Oklahoma State": "197", "Iowa State": "66", "Texas": "251", "Kansas State": "2306", "TCU": "2628",
+            "Texas Tech": "2641", "West Virginia": "277", "Kansas": "2305", "Notre Dame": "87"}
 
     return code[name]
 
@@ -72,6 +80,16 @@ def name_cheak_espn(name):      # see if names need changing from nicknames on e
         return "Mississippi State"
     elif name == "Miami":
         return "Miami-FL"
+    elif name == "Mich. St":
+        return "Michigan State"
+    elif name == "Oregon St":
+        return "Oregon State"
+    elif name == "Cal":
+        return "California"
+    elif name == "Washington St":
+        return "Washington State"
+    elif name == "UNC":
+        return "North Carolina"
     else:
         return name
 
@@ -111,13 +129,13 @@ def compare_get_schedules(team, SP, espnRankings, soFar):
     url = "https://www.espn.com/college-football/team/schedule/_/id/"
     urlEnd = "/season/"
     url = url + espn_codes(team) + urlEnd + str(year)
+    print(str(team) + "\n")
     outcomes, teams = GetSchedule.get_all_outcomes_on_schedule(url)
 
     allGames = []   # will store complete list of games for data
     game = []       # will store one game at a time
 
     for i in range(len(outcomes)):
-        print(teams[i])
         if teams[i] in SP and teams[i] in espnRankings and (team, teams[i]) not in soFar:         # if it's not in the dictionary then the team isn't D1
             game = game + SP[team] + espnRankings[team] + SP[teams[i]] + espnRankings[teams[i]]
             game.append(outcomes[teams[i]])     # append outcome to stats
@@ -128,10 +146,14 @@ def compare_get_schedules(team, SP, espnRankings, soFar):
         else:
             continue
 
-    if ("Florida", "Florida State") in soFar:
-        print("Its working!!!")
     return allGames
 
+
+def save_to_csv(games):
+    with open('games.csv', 'w', newline='') as lines:
+        for game in games:
+            thewriter = csv.writer(lines)  # writing to csv
+            thewriter.writerow(game)
 
 
 if __name__ == '__main__':
@@ -140,7 +162,14 @@ if __name__ == '__main__':
             "North Carolina": "153", "Pittsburgh": "221", "Virginia": "258", "Virginia Tech": "259", "Georgia": "61",
             "Florida": "57", "Tennessee": "2633", "South Carolina": "2579", "Kentucky": "96", "Missouri": "142",
             "Vanderbilt": "238", "LSU": "99", "Alabama": "333", "Texas A&M": "245", "Auburn": "2",
-            "Mississippi State": "344", "Ole Miss": "145", "Arkansas": "8"}
+            "Mississippi State": "344", "Ole Miss": "145", "Arkansas": "8", "Ohio State": "194", "Penn State": "213",
+            "Michigan": "130", "Indiana": "84", "Maryland": "120", "Rutgers": "164",
+            "Minnesota": "135", "Wisconsin": "275", "Iowa": "2294", "Illinois": "356", "Purdue": "2509",
+            "Nebraska": "158", "Northwestern": "77", "Oregon": "2483", "Oregon State": "204", "Washington": "264",
+            "Stanford": "24", "California": "25", "Washington State": "265", "Utah": "254", "USC": "30", "UCLA": "26",
+            "Arizona State": "9", "Arizona": "12", "Colorado": "38", "Oklahoma": "201", "Baylor": "239",
+            "Oklahoma State": "197", "Iowa State": "66", "Texas": "251", "Kansas State": "2306", "TCU": "2628",
+            "Texas Tech": "2641", "West Virginia": "277", "Kansas": "2305", "Notre Dame": "87"}
 
 
     SP = get_all_teams_rankings()
@@ -149,9 +178,11 @@ if __name__ == '__main__':
     espnRankings = get_all_team_rankings_espn("http://www.espn.com/college-football/statistics/teamratings/_/year/2018/tab/efficiency")
     soFar = {}
     allGames = []
-    for i in code:
-        allGames = allGames + compare_get_schedules(i, SP, espnRankings, soFar)
+    for name in code:
+        allGames = allGames + compare_get_schedules(name, SP, espnRankings, soFar)
 
     print()
     for i in allGames:
         print(i)
+
+    save_to_csv(allGames)
