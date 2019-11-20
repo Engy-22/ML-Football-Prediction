@@ -4,9 +4,9 @@ import GetSchedule
 import csv
 
 
-def get_SPStats():                  # return all td tags
-    url = "https://www.footballoutsiders.com/stats/ncaa/2018"  # default URL to parse
-
+def get_SPStats(year):                  # return all td tags
+    url = "https://www.footballoutsiders.com/stats/ncaa/"  # default URL to parse
+    url = url + str(year)
     uClient = uReq(url)  # getting html info to parse
     page_soup = uClient.read()
     uClient.close()
@@ -16,9 +16,11 @@ def get_SPStats():                  # return all td tags
     return AllStats
 
 
-def get_efficiency_stats(url):                  # return all td tags
-    #url = "http://www.espn.com/college-football/statistics/teamratings/_/year/2018/tab/efficiency"  # default URL to parse
-
+def get_efficiency_stats(year):                  # return all td tags
+    url = "http://www.espn.com/college-football/statistics/teamratings/_/year/"  # default URL to parse
+    urlEnd = "/tab/efficiency"
+    url = url + str(year)
+    url = url + urlEnd
     uClient = uReq(url)  # getting html info to parse
     page_soup = uClient.read()
     uClient.close()
@@ -41,7 +43,7 @@ def espn_codes(name):
             "Florida": "57", "Tennessee": "2633", "South Carolina": "2579", "Kentucky": "96", "Missouri": "142",
             "Vanderbilt": "238", "LSU": "99", "Alabama": "333", "Texas A&M": "245", "Auburn": "2",
             "Mississippi State": "344", "Ole Miss": "145", "Arkansas": "8", "Ohio State": "194", "Penn State": "213",
-            "Michigan": "130", "Indiana": "84", "Michigan State": "124", "Maryland": "120", "Rutgers": "164",
+            "Michigan": "130", "Indiana": "84", "Maryland": "120", "Rutgers": "164",
             "Minnesota": "135", "Wisconsin": "275", "Iowa": "2294", "Illinois": "356", "Purdue": "2509",
             "Nebraska": "158", "Northwestern": "77", "Oregon": "2483", "Oregon State": "204", "Washington": "264",
             "Stanford": "24", "California": "25", "Washington State": "265", "Utah": "254", "USC": "30", "UCLA": "26",
@@ -90,6 +92,8 @@ def name_cheak_espn(name):      # see if names need changing from nicknames on e
         return "Washington State"
     elif name == "UNC":
         return "North Carolina"
+    elif name == "OSU":
+        return "Ohio State"
     else:
         return name
 
@@ -118,29 +122,29 @@ def cull(lst):              # only gets information for name, overall, offense, 
     return teams
 
 
-def get_all_teams_rankings():           # gets all S&P+ rankings
-    stats = get_SPStats()
+def get_all_teams_rankings(year):           # gets all S&P+ rankings
+    stats = get_SPStats(year)
     stats = cull(stats)
     return stats
 
 
-def compare_get_schedules(team, SP, espnRankings, soFar):
-    year = 2018
+def compare_get_schedules(team, SP, espnRankings, soFar, year):
     url = "https://www.espn.com/college-football/team/schedule/_/id/"
     urlEnd = "/season/"
     url = url + espn_codes(team) + urlEnd + str(year)
-    print(str(team) + "\n")
+    print(str(team))
     outcomes, teams = GetSchedule.get_all_outcomes_on_schedule(url)
 
     allGames = []   # will store complete list of games for data
     game = []       # will store one game at a time
 
     for i in range(len(outcomes)):
-        if teams[i] in SP and teams[i] in espnRankings and (team, teams[i]) not in soFar:         # if it's not in the dictionary then the team isn't D1
+        # if it's not in the dictionary then the team isn't D1
+        if teams[i] in SP and teams[i] in espnRankings and (team, teams[i]) not in soFar:
             game = game + SP[team] + espnRankings[team] + SP[teams[i]] + espnRankings[teams[i]]
             game.append(outcomes[teams[i]])     # append outcome to stats
             allGames.append(game)
-            #print(allGames)
+
             game = []       # clear list for next team
             soFar[(teams[i], team)] = ""
         else:
@@ -149,11 +153,25 @@ def compare_get_schedules(team, SP, espnRankings, soFar):
     return allGames
 
 
-def save_to_csv(games):
-    with open('games.csv', 'w', newline='') as lines:
+def save_to_csv(games, file):
+    file = file + ".csv"
+    with open(file, 'w', newline='') as lines:
         for game in games:
             thewriter = csv.writer(lines)  # writing to csv
             thewriter.writerow(game)
+
+
+def save_to_games():
+    with open('games.csv', 'w', newline='') as lines:
+        for line in open("games2017.csv"):
+            csv_row = line.split()
+            thewriter = csv.writer(lines)  # writing to csv
+            thewriter.writerow(csv_row)
+
+        for line in open("games2018.csv"):
+            csv_row = line.split()
+            thewriter = csv.writer(lines)  # writing to csv
+            thewriter.writerow(csv_row)
 
 
 if __name__ == '__main__':
@@ -171,18 +189,31 @@ if __name__ == '__main__':
             "Oklahoma State": "197", "Iowa State": "66", "Texas": "251", "Kansas State": "2306", "TCU": "2628",
             "Texas Tech": "2641", "West Virginia": "277", "Kansas": "2305", "Notre Dame": "87"}
 
+    year = 2017
 
-    SP = get_all_teams_rankings()
-    #outcomes, teams = GetSchedule.get_all_outcomes_on_schedule("https://www.espn.com/college-football/team/schedule/_/id/52/season/2018")
+    SP = get_all_teams_rankings(year)
+    espnRankings = get_all_team_rankings_espn(year)
 
-    espnRankings = get_all_team_rankings_espn("http://www.espn.com/college-football/statistics/teamratings/_/year/2018/tab/efficiency")
+    soFar = {}
+    allGames = []
+
+    for name in code:
+        allGames = allGames + compare_get_schedules(name, SP, espnRankings, soFar, year)
+
+    save_to_csv(allGames, "games2017")
+
+    year = year + 1
+    SP = get_all_teams_rankings(year)
+    espnRankings = get_all_team_rankings_espn(year)
     soFar = {}
     allGames = []
     for name in code:
-        allGames = allGames + compare_get_schedules(name, SP, espnRankings, soFar)
+        allGames = allGames + compare_get_schedules(name, SP, espnRankings, soFar, year)
+    save_to_csv(allGames, "games2018")
 
     print()
     for i in allGames:
         print(i)
 
-    save_to_csv(allGames)
+
+    save_to_games()
