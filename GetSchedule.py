@@ -42,8 +42,13 @@ def get_all_outcomes_on_schedule(url):      # main function to call helpers, ret
 
     for i in range(12):
         game, outcome = get_outcomes(tags)
-        if outcome == "C":
+
+        if outcome == "C" or outcome == "P":
             continue
+        if outcome == "W":
+            outcome = 1
+        else:
+            outcome = 0
         team.append(game)
         games[game] = outcome       # add to found so far
         tags = tags[7:]             # move to next game

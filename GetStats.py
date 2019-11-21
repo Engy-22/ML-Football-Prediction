@@ -155,20 +155,33 @@ def compare_get_schedules(team, SP, espnRankings, soFar, year):
 
 def save_to_csv(games, file):
     file = file + ".csv"
+    games.insert(0, ["A_SP_rating", "A_SP_offense", "A_SP_defense", "A_SP_special", "A_ESPN_offense",
+                     "A_ESPN_defense", "A_ESPN_special", "A_ESPN_rating","B_SP_rating",
+                     "B_SP_offense","B_SP_defense","B_SP_special","B_ESPN_offense","B_ESPN_defense",
+                     "B_ESPN_special","B_ESPN_rating","outcome"])
+
     with open(file, 'w', newline='') as lines:
         for game in games:
             thewriter = csv.writer(lines)  # writing to csv
             thewriter.writerow(game)
 
 
-def save_to_games():
+def save_to_games(year1, year2, year3=""):
     with open('games.csv', 'w', newline='') as lines:
-        for line in open("games2017.csv"):
+
+        for line in open(year1 + ".csv"):
+            csv_row = line.split()
+            print(csv_row)
+            print(line)
+            thewriter = csv.writer(lines)  # writing to csv
+            thewriter.writerow(line)
+
+        for line in open(year2 + ".csv"):
             csv_row = line.split()
             thewriter = csv.writer(lines)  # writing to csv
             thewriter.writerow(csv_row)
 
-        for line in open("games2018.csv"):
+        for line in open(year3 + ".csv"):
             csv_row = line.split()
             thewriter = csv.writer(lines)  # writing to csv
             thewriter.writerow(csv_row)
@@ -189,31 +202,49 @@ if __name__ == '__main__':
             "Oklahoma State": "197", "Iowa State": "66", "Texas": "251", "Kansas State": "2306", "TCU": "2628",
             "Texas Tech": "2641", "West Virginia": "277", "Kansas": "2305", "Notre Dame": "87"}
 
-    year = 2017
+    year = 2016
+    year1 = "games2016"
+    year2 = "games2017"
+    year3 = "games2018"
 
     SP = get_all_teams_rankings(year)
     espnRankings = get_all_team_rankings_espn(year)
 
+    print("Stage 1")
     soFar = {}
     allGames = []
-
+    Games = []
     for name in code:
-        allGames = allGames + compare_get_schedules(name, SP, espnRankings, soFar, year)
+        Games = Games + compare_get_schedules(name, SP, espnRankings, soFar, year)
 
-    save_to_csv(allGames, "games2017")
+    save_to_csv(Games, year1)
+    allGames = allGames + Games
 
+    print("Stage 2")
     year = year + 1
     SP = get_all_teams_rankings(year)
     espnRankings = get_all_team_rankings_espn(year)
     soFar = {}
-    allGames = []
+    Games = []
     for name in code:
-        allGames = allGames + compare_get_schedules(name, SP, espnRankings, soFar, year)
-    save_to_csv(allGames, "games2018")
+        Games = Games + compare_get_schedules(name, SP, espnRankings, soFar, year)
+    save_to_csv(Games, year2)
+    allGames = allGames + Games
 
+    print("Stage 3")
+    year = year + 1
+    SP = get_all_teams_rankings(year)
+    espnRankings = get_all_team_rankings_espn(year)
+    soFar = {}
+    Games = []
+    for name in code:
+        Games = Games + compare_get_schedules(name, SP, espnRankings, soFar, year)
+    save_to_csv(Games, year3)
+    allGames = allGames + Games
     print()
-    for i in allGames:
-        print(i)
+    #for i in allGames:
+    #    print(i)
 
-
-    save_to_games()
+    save_to_csv(allGames, "games")
+    print("\nDone")
+    #save_to_games(year1, year2, year3)
