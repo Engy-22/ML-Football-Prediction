@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import numpy as np
 import pandas as pd
 
 import tensorflow as tf
@@ -38,28 +37,27 @@ test_ds = df_to_dataset(test, shuffle=False, batch_size=batch_size)
 
 for feature_batch, label_batch in train_ds.take(1):
     print('Every feature:', list(feature_batch.keys()))
-    print('A batch of A_SP+_rating:', feature_batch['A_SP_rating'])
+    print('A batch of D_rush:', feature_batch['D_rush'])
     print('A batch of targets:', label_batch )
 
 feature_columns = []
 
 # numeric cols
-for header in ["A_SP_rating","A_SP_offense","A_SP_defense","A_SP_special","A_ESPN_offense","A_ESPN_defense",
-               "A_ESPN_special","A_ESPN_rating","B_SP_rating","B_SP_offense","B_SP_defense","B_SP_special",
-               "B_ESPN_offense","B_ESPN_defense","B_ESPN_special","B_ESPN_rating"]:
+for header in ["D_pass", "D_rush", "D_pts", "O_pass", "O_rush",
+                         "O_pts", "BD_pass", "BD_rush","BD_pts",
+                         "BO_pass","BO_rush","BO_pts"]:
   feature_columns.append(feature_column.numeric_column(header))
 
 feature_layer = tf.keras.layers.DenseFeatures(feature_columns)
 
-batch_size = 5
 train_ds = df_to_dataset(train, batch_size=batch_size)
 val_ds = df_to_dataset(val, shuffle=False, batch_size=batch_size)
 test_ds = df_to_dataset(test, shuffle=False, batch_size=batch_size)
 
 model = tf.keras.Sequential([
   feature_layer,
-  layers.Dense(90, activation='relu'),
-  layers.Dense(80, activation='relu'),
+  layers.Dense(120, activation='relu'),
+  layers.Dense(120, activation='relu'),
   layers.Dense(1, activation='sigmoid')
 ])
 
